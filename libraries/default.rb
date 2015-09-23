@@ -19,7 +19,6 @@ def mon_env_search_string
     elsif node['ceph']['search_environment']
       # search for any nodes with this environment
       search_string += " AND chef_environment:#{node.chef_environment}"
-    else
       # search for any mon nodes
     end
   end
@@ -39,6 +38,8 @@ def osd_secret
   if node['ceph']['encrypted_data_bags']
     secret = Chef::EncryptedDataBagItem.load_secret(node['ceph']['osd']['secret_file'])
     return Chef::EncryptedDataBagItem.load('ceph', 'osd', secret)['secret']
+  elsif node['ceph']['bootstrap_osd_key']
+    return node['ceph']['bootstrap_osd_key']
   else
     return mon_nodes[0]['ceph']['bootstrap_osd_key']
   end
@@ -119,7 +120,7 @@ def mon_addresses
       end
     end
   end
-  mon_ips.reject { |m| m.nil? }.uniq
+  mon_ips.reject(&:nil?).uniq
 end
 
 def mon_secret

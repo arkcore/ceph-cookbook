@@ -54,10 +54,11 @@ end
 # TODO: cluster name
 cluster = 'ceph'
 
-execute 'format bootstrap-osd as keyring' do
+execute 'format bootstrap-osd as keyring' do # ~FC009
   command lazy { "ceph-authtool '/var/lib/ceph/bootstrap-osd/#{cluster}.keyring' --create-keyring --name=client.bootstrap-osd --add-key='#{osd_secret}'" }
   creates "/var/lib/ceph/bootstrap-osd/#{cluster}.keyring"
   only_if { osd_secret }
+  sensitive true if Chef::Resource::Execute.method_defined? :sensitive
 end
 
 if crowbar?
@@ -93,7 +94,7 @@ else
   if node['ceph']['osd_devices']
     devices = node['ceph']['osd_devices']
 
-    devices = Hash[(0...devices.size).zip devices] unless devices.kind_of? Hash
+    devices = Hash[(0...devices.size).zip devices] unless devices.is_a? Hash
 
     devices.each do |index, osd_device|
       unless osd_device['status'].nil?
